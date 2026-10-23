@@ -1,0 +1,10 @@
+{
+  "name": "공인중개사 소식지 터",
+  "short_name": "소식지 터",
+  "description": "개업공인중개사를 위한 실전 판례·법률 매거진",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#1B2A4A",
+  "orientation": "portrait"
+}

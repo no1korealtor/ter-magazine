@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2E6B4D" />
+  <title>공인중개사 소식지 터 - 실전 판례·법률 매거진</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 상단 매거진 마스트헤드 (순수 독자용: 관리자 버튼 완전 제거) -->
+    <header class="reader-masthead">
+      <div class="masthead-meta-row">
+        <div class="issue-pill" id="currentIssueBadge">2026. 10 창간호 · Vol.01</div>
+        <div class="masthead-actions">
+          <button class="nav-icon-btn" id="btnToggleTocDrawer" title="전체 목차">
+            <span>📑 전체목차</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="brand-section" id="btnGoHome">
+        <div class="brand-logo-seal">터</div>
+        <div class="brand-info">
+          <span class="brand-tagline">개업공인중개사를 위한 실전 판례·법률 소식지</span>
+          <h1 class="brand-title">공인중개사 소식지 <span class="accent-char">터</span></h1>
+        </div>
+      </div>
+
+      <!-- 검색 & 카테고리 네비게이션 -->
+      <div class="search-container">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="판례 키워드 검색 (예: 권리금, 다가구, 가계약, 중개보수)" />
+          <button class="btn-clear-search hidden" id="btnClearSearch">✕</button>
+        </div>
+      </div>
+
+      <nav class="category-bar" id="categoryTabs">
+        <button class="tab-btn active" data-cat="ALL">전체 호수</button>
+        <button class="tab-btn" data-cat="INDEX">📑 자동목차</button>
+        <button class="tab-btn" data-cat="행정처분" style="color:#B91C1C; font-weight:800;">🚨 행정처분</button>
+        <button class="tab-btn" data-cat="과태료" style="color:#D97706; font-weight:800;">⚠️ 과태료</button>
+        <button class="tab-btn" data-cat="가계약" style="color:#047857; font-weight:800;">📝 가계약</button>
+        <button class="tab-btn" data-cat="상가·권리금">상가·권리금</button>
+        <button class="tab-btn" data-cat="주택임대차">주택임대차</button>
+        <button class="tab-btn" data-cat="중개책임·보수">중개책임·보수</button>
+        <button class="tab-btn" data-cat="계약·실무소식">계약·실무소식</button>
+        <button class="tab-btn" data-cat="BOOKMARK">⭐ 스크랩</button>
+      </nav>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="main-feed" id="mainContent">
+      <!-- 1. 매거진 홈 뷰 -->
+      <section id="viewHome" class="view-panel active">
+        <!-- 이번 호 자동 생성 전체 목차 카드 -->
+        <div class="issue-toc-card" id="homeIndexCard">
+          <div class="toc-card-top">
+            <div>
+              <span class="toc-eyebrow">CONTENTS INDEX</span>
+              <h2 class="toc-title">이번 호 소식지 <span style="color:var(--gold-700)">자동 목차</span></h2>
+            </div>
+            <span class="toc-count-badge" id="totalArticleCount">4건 수록</span>
+          </div>
+          <p class="toc-subtext">제목을 터치하면 해당 판례 요약 기사로 즉시 이동합니다.</p>
+          <ol class="auto-toc-entries" id="homeAutoTocList"></ol>
+        </div>
+
+        <!-- 대표 커버스토리 -->
+        <div id="featuredArticleContainer"></div>
+
+        <!-- 기사 목록 -->
+        <div style="display:flex; align-items:center; gap:10px; margin: 16px 0 14px;">
+          <h3 style="font-family:var(--font-serif); font-size:1.05rem; color:var(--green-900); white-space:nowrap;">수록 판례 & 실무 브리핑</h3>
+          <div style="height:1px; background:var(--border-light); flex:1;"></div>
+        </div>
+
+        <div class="article-cards-wrap" id="articleFeed"></div>
+      </section>
+
+      <!-- 2. 기사 상세 읽기 뷰 -->
+      <section id="viewArticleDetail" class="view-panel hidden">
+        <div class="detail-top-nav">
+          <button class="btn-nav-back" id="btnBackToList">← 목차로 돌아가기</button>
+          <div class="detail-actions">
+            <button class="btn-reader-tool" id="btnFontSizeToggle">가± 글자크기</button>
+            <button class="btn-reader-tool" id="btnBookmarkDetail">☆ 스크랩</button>
+          </div>
+        </div>
+
+        <article class="detail-article-paper" id="articleDetailBody"></article>
+      </section>
+    </main>
+
+    <!-- 하단 푸터 (정기간행물 법적 표기 및 발행처 정보) -->
+    <footer class="app-footer">
+      <div class="footer-logo">공인중개사 소식지 <strong>터 [址]</strong></div>
+      <p class="footer-slogan">개업공인중개사의 안전한 계약과 권익을 지키는 실전 판례·법률 매거진</p>
+      
+      <div class="footer-imprint">
+        <div class="imprint-title">신대림공인중개사사무소 <span class="imprint-sub">(제호: 공인중개사소식지)</span></div>
+        <div class="imprint-grid">
+          <div><span>대표 / 발행·편집인</span> <strong>조항준</strong></div>
+          <div><span>등록번호</span> <strong>서울, 아53763</strong></div>
+          <div><span>등록일자</span> 2021년 06월 14일</div>
+          <div><span>사업자등록번호</span> 219-01-50737</div>
+          <div><span>전화번호</span> 02-375-4489</div>
+          <div><span>주소</span> 서울특별시 마포구 모래내로7길 52 (성산동)</div>
+        </div>
+      </div>
+
+      <p class="footer-copy">© 2026 공인중개사 소식지 터. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- 전체 목차 모달 -->
+  <div class="modal-backdrop hidden" id="modalTocDrawer" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#FFF; width:100%; max-width:480px; max-height:80vh; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 12px 30px rgba(0,0,0,0.15);">
+      <div style="background:var(--green-800); color:#FFF; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:0.98rem; font-weight:800;">📑 소식지 터 전체 목차</h3>
+        <button id="btnCloseTocDrawer" style="background:none; border:none; color:#FFF; font-size:1.1rem; cursor:pointer;">✕</button>
+      </div>
+      <div id="drawerTocBody" style="padding:18px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
