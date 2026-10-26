@@ -207,7 +207,7 @@ function renderFeaturedAndFeed() {
           ${isBm ? `<span>· ⭐ 스크랩 보관됨</span>` : ''}
         </div>
         <div class="card-read-action-bar">
-          <span>전문 및 실무 추천 특약 읽기</span>
+          <span>기사 전문 읽기</span>
           <span class="action-arrow">→</span>
         </div>
       </article>
@@ -243,7 +243,6 @@ function openArticle(id) {
             </a>
           </li>
         `).join('')}
-        ${art.specialClause ? `<li><a href="#sec-clause" class="in-toc-link" data-target="sec-clause"><span>📋 계약서 추천 특약사항 문구</span></a></li>` : ''}
       </ul>
     </nav>
   ` : '';
@@ -257,15 +256,6 @@ function openArticle(id) {
     </div>
   ` : '';
 
-  const clauseHtml = art.specialClause ? `
-    <div class="box-special-clause" id="sec-clause">
-      <div class="clause-head-row">
-        <span class="clause-heading">📋 실무 계약서 추천 특약사항 문구</span>
-        <button type="button" class="btn-clause-copy" id="btnCopyClause">복사해서 계약서에 쓰기</button>
-      </div>
-      <div class="clause-body-text" id="clauseText">${escapeHtml(art.specialClause).replace(/\n/g, '<br/>')}</div>
-    </div>
-  ` : '';
 
 
   const linksHtml = (art.relatedLinks && art.relatedLinks.length > 0) ? `
@@ -304,7 +294,6 @@ function openArticle(id) {
       ${bodyHtml}
     </div>
 
-    ${clauseHtml}
     ${linksHtml}
   `;
 
@@ -321,14 +310,7 @@ function openArticle(id) {
     });
   });
 
-  const btnCopy = document.getElementById('btnCopyClause');
-  if (btnCopy) {
-    btnCopy.addEventListener('click', () => {
-      navigator.clipboard.writeText(art.specialClause).then(() => {
-        showToast('📋 특약 문구가 클립보드에 복사되었습니다!');
-      });
-    });
-  }
+
 
 
 }
