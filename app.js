@@ -127,18 +127,21 @@ function renderHomeAutoToc() {
     const num = String(idx + 1).padStart(2, '0');
     return `
       <li class="auto-toc-entry" data-id="${art.id}">
-        <div class="toc-entry-left">
+        <div class="toc-entry-top">
           <span class="toc-entry-num">${num}</span>
           <div class="toc-entry-content-col">
             <div class="toc-entry-badge-row">
               <span class="toc-entry-cat">${escapeHtml(art.category)}</span>
-              ${art.caseNumber ? `<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">${escapeHtml(art.caseNumber)}</span>` : ''}
+              ${art.caseNumber ? `<span class="toc-entry-casenum">${escapeHtml(art.caseNumber)}</span>` : ''}
             </div>
             <div class="toc-entry-text">${escapeHtml(art.title)}</div>
             ${art.subtitle ? `<div class="toc-entry-subtext">${escapeHtml(art.subtitle)}</div>` : ''}
           </div>
         </div>
-        <span class="toc-entry-arrow">읽기 →</span>
+        <div class="toc-entry-bottom-bar">
+          <span>기사 읽기</span>
+          <span class="arrow-sym">→</span>
+        </div>
       </li>
     `;
   }).join('');
@@ -199,13 +202,13 @@ function renderFeaturedAndFeed() {
         <h3 class="card-main-title">${escapeHtml(art.title)}</h3>
         ${art.subtitle ? `<p class="card-sub-lead">${escapeHtml(art.subtitle)}</p>` : ''}
         ${firstB ? `<div class="card-summary-bubble">💡 <strong>핵심 요약:</strong> ${escapeHtml(firstB)}</div>` : ''}
-        <div class="card-bottom-line">
-          <div style="display:flex; gap:8px;">
-            <span>📑 목차 ${headings.length}개</span>
-            ${art.rawJudgment ? `<span>· 📄 원문 수록</span>` : ''}
-            ${isBm ? `<span>· ⭐ 스크랩</span>` : ''}
-          </div>
-          <span class="card-action-text">자세히 읽기 →</span>
+        <div class="card-meta-tags-line">
+          <span>📑 본문 소제목 ${headings.length}개</span>
+          ${isBm ? `<span>· ⭐ 스크랩 보관됨</span>` : ''}
+        </div>
+        <div class="card-read-action-bar">
+          <span>전문 및 실무 추천 특약 읽기</span>
+          <span class="action-arrow">→</span>
         </div>
       </article>
     `;
@@ -241,7 +244,6 @@ function openArticle(id) {
           </li>
         `).join('')}
         ${art.specialClause ? `<li><a href="#sec-clause" class="in-toc-link" data-target="sec-clause"><span>📋 계약서 추천 특약사항 문구</span></a></li>` : ''}
-        ${art.rawJudgment ? `<li><a href="#sec-judgment" class="in-toc-link" data-target="sec-judgment"><span>📄 판결문 원문 자세히 보기</span></a></li>` : ''}
       </ul>
     </nav>
   ` : '';
@@ -265,17 +267,6 @@ function openArticle(id) {
     </div>
   ` : '';
 
-  const judgmentHtml = art.rawJudgment ? `
-    <div class="box-raw-judgment" id="sec-judgment">
-      <button type="button" class="btn-toggle-judgment" id="btnToggleRaw">
-        <span>📄 판결문 원문 / 판시사항 자세히 보기 (클릭하여 펼치기)</span>
-        <span id="judgmentArrow">▼</span>
-      </button>
-      <div class="judgment-view-body hidden" id="rawBody">
-        <div class="judgment-pre-content">${escapeHtml(art.rawJudgment)}</div>
-      </div>
-    </div>
-  ` : '';
 
   const linksHtml = (art.relatedLinks && art.relatedLinks.length > 0) ? `
     <div class="box-related-links">
@@ -314,7 +305,6 @@ function openArticle(id) {
     </div>
 
     ${clauseHtml}
-    ${judgmentHtml}
     ${linksHtml}
   `;
 
@@ -326,14 +316,7 @@ function openArticle(id) {
       const target = document.getElementById(targetId);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        if (targetId === 'sec-judgment') {
-          const body = document.getElementById('rawBody');
-          const arrow = document.getElementById('judgmentArrow');
-          if (body && body.classList.contains('hidden')) {
-            body.classList.remove('hidden');
-            if (arrow) arrow.textContent = '▲';
-          }
-        }
+
       }
     });
   });
@@ -347,15 +330,7 @@ function openArticle(id) {
     });
   }
 
-  const btnToggleRaw = document.getElementById('btnToggleRaw');
-  if (btnToggleRaw) {
-    btnToggleRaw.addEventListener('click', () => {
-      const body = document.getElementById('rawBody');
-      const arrow = document.getElementById('judgmentArrow');
-      const isHidden = body.classList.toggle('hidden');
-      arrow.textContent = isHidden ? '▼' : '▲';
-    });
-  }
+
 }
 
 function extractHeadings(md) {
