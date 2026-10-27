@@ -258,19 +258,6 @@ function openArticle(id) {
 
 
 
-  const linksHtml = (art.relatedLinks && art.relatedLinks.length > 0) ? `
-    <div class="box-related-links">
-      <div class="related-links-heading">🔗 관련 법령 및 판례 원문 바로가기 링크</div>
-      <div class="link-cards-list">
-        ${art.relatedLinks.map(lk => `
-          <a href="${escapeHtml(lk.url)}" target="_blank" rel="noopener noreferrer" class="link-out-card">
-            <span>🔗 ${escapeHtml(lk.title)}</span>
-            <span>열기 ↗</span>
-          </a>
-        `).join('')}
-      </div>
-    </div>
-  ` : '';
 
   const detailEl = document.getElementById('articleDetailBody');
   detailEl.innerHTML = `
@@ -294,7 +281,6 @@ function openArticle(id) {
       ${bodyHtml}
     </div>
 
-    ${linksHtml}
   `;
 
   // 내부 목차 스크롤
