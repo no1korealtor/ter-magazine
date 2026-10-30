@@ -1,3 +1,15 @@
+function checkUrlDeepLink() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const artId = params.get('article');
+    if (artId && state.articles.some(a => a.id === artId)) {
+      openArticle(artId);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 /**
  * 공인중개사 소식지 터 (Reader Viewer App)
  * - 개업공인중개사용 순수 뷰어 (관리자 버튼/기능 없음)
@@ -27,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 앱 실행 시 Supabase 클라우드에서 최신 기사 실시간 동기화
   await fetchRemoteArticles();
+  checkUrlDeepLink();
 
   // PC 스튜디오와 같은 기기/브라우저 테스트 시 실시간 동기화
   window.addEventListener('storage', (e) => {
@@ -281,6 +294,13 @@ function openArticle(id) {
       ${bodyHtml}
     </div>
 
+    <div class="article-share-box">
+      <div class="share-box-desc">💡 이 판례 기사가 유용하셨나요? 나에게 카톡으로 남기거나 동료 소장님께 공유해 보세요!</div>
+      <button type="button" class="btn-share-kakao-big" id="btnShareArticleBottom">
+        <span>💬 카카오톡으로 기사 요약 & 소식지 링크 공유하기</span>
+      </button>
+    </div>
+
   `;
 
   // 내부 목차 스크롤
@@ -291,10 +311,14 @@ function openArticle(id) {
       const target = document.getElementById(targetId);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
       }
     });
   });
+
+  const btnShareBottom = document.getElementById('btnShareArticleBottom');
+  if (btnShareBottom) {
+    btnShareBottom.addEventListener('click', shareCurrentArticle);
+  }
 
 
 
@@ -392,6 +416,11 @@ function bindEvents() {
     document.documentElement.style.setProperty('--font-scale', state.fontScale);
     showToast(`글자 크기: ${Math.round(state.fontScale * 100)}%`);
   });
+
+  const btnShareTop = document.getElementById('btnShareArticleTop');
+  if (btnShareTop) {
+    btnShareTop.addEventListener('click', shareCurrentArticle);
+  }
 
   document.getElementById('btnBookmarkDetail').addEventListener('click', () => {
     if (!state.currentArticleId) return;
@@ -642,3 +671,50 @@ const INITIAL_ARTICLES = [
     "contentMarkdown": "## 1. 사건의 발단\\n상가 임차인 A씨는 5년간 카페를 운영하다가 점포를 넘기기 위해 공인중개사사무소에 매물을 내놓았습니다. 그러나 건물주는 리모델링 후 직접 사용하겠다며 계약 체결을 거절했습니다.\\n\\n## 2. 법원의 판단\\n대법원은 임대인이 계약 거절 의사를 확정적으로 표시했다면 실제로 신규 임차인을 주선하지 않았더라도 권리금 회수방해 손해배상 책임을 진다고 판결했습니다."
   }
 ];
+
+async function shareCurrentArticle() {
+  if (!state.currentArticleId) return;
+  const art = state.articles.find(a => a.id === state.currentArticleId);
+  if (!art) return;
+
+  const shareUrl = `https://no1korealtor.github.io/ter-magazine/?article=${encodeURIComponent(art.id)}`;
+  const bullets = (art.summaryBullets && art.summaryBullets.length > 0)
+    ? '\n\n💡 [핵심 요약]\n' + art.summaryBullets.map(b => `• ${b}`).join('\n')
+    : '';
+
+  const shareTitle = `[공인중개사 소식지 터] ${art.title}`;
+  const shareText = `📘 [공인중개사 소식지 터]\n📌 ${art.category} | ${art.caseNumber || ''}\n\n"${art.title}"${bullets}\n\n👇 아래 링크를 누르면 '공인중개사 소식지 터'에서 기사 전문을 바로 보실 수 있습니다.\n${shareUrl}`;
+
+  // 1순위: 안드로이드 네이티브 브릿지 지원 시
+  if (window.AndroidBridge && typeof window.AndroidBridge.shareText === 'function') {
+    window.AndroidBridge.shareText(shareTitle, shareText);
+    return;
+  }
+
+  // 2순위: 모바일 브라우저 Web Share API (카카오톡, 문자 등 선택 창 호출)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: shareText
+      });
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+    }
+  }
+
+  // 3순위: PC 또는 구형 환경 클립보드 복사
+  try {
+    await navigator.clipboard.writeText(shareText);
+    showToast('💬 기사 요약과 소식지 링크가 복사되었습니다! 카카오톡 대화창에 붙여넣기(Ctrl+V) 하세요.');
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = shareText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast('💬 기사 요약과 소식지 링크가 복사되었습니다! 카카오톡에 붙여넣기 하세요.');
+  }
+}

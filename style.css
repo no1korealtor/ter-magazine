@@ -1018,3 +1018,59 @@ body {
 .article-item-card:hover .card-read-action-bar .action-arrow {
   transform: translateX(4px);
 }
+
+
+/* === [추가] 카카오톡 및 동료 중개사 공유하기 버튼 스타일 === */
+.btn-kakao-top {
+  background: #FEE500 !important;
+  color: #191919 !important;
+  border-color: #F2D700 !important;
+  font-weight: 800 !important;
+}
+
+.btn-kakao-top:hover {
+  background: #F5DC00 !important;
+}
+
+.article-share-box {
+  margin-top: 28px;
+  padding: 18px;
+  background: #FAF8F3;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.share-box-desc {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-bottom: 12px;
+}
+
+.btn-share-kakao-big {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #FEE500;
+  color: #191919;
+  border: 1px solid #E5CE00;
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-share-kakao-big:hover {
+  background: #F4DC00;
+  transform: translateY(-1px);
+}
+
+.btn-share-kakao-big:active {
+  transform: translateY(0);
+}
