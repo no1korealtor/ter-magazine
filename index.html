@@ -93,7 +93,7 @@
         <div class="detail-top-nav">
           <button class="btn-nav-back" id="btnBackToList">← 목차로 돌아가기</button>
           <div class="detail-actions">
-            <button class="btn-reader-tool btn-kakao-top" id="btnShareArticleTop">💬 카톡 공유</button>
+            <button class="btn-reader-tool btn-kakao-top" id="btnOpenShareModal">📤 SNS 공유</button>
             <button class="btn-reader-tool" id="btnFontSizeToggle">가± 글자크기</button>
             <button class="btn-reader-tool" id="btnBookmarkDetail">☆ 스크랩</button>
           </div>
@@ -135,8 +135,72 @@
     </div>
   </div>
 
+  <!-- 📲 채널별 맞춤 공유 & 앱 설치 모달 -->
+  <div class="modal-backdrop hidden" id="modalShareChannels" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:110; display:flex; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#FFF; width:100%; max-width:440px; border-radius:16px; overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,0.25);">
+      <div style="background:var(--green-800); color:#FFF; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-size:1.02rem; font-weight:800; margin-bottom:2px;">📤 채널 맞춤 공유 &amp; 앱 소장</h3>
+          <p style="font-size:0.76rem; opacity:0.85;">플랫폼 특성에 맞춰 최적화된 형식으로 공유됩니다.</p>
+        </div>
+        <button id="btnCloseShareModal" style="background:none; border:none; color:#FFF; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      
+      <div style="padding:18px; display:flex; flex-direction:column; gap:12px;">
+        <!-- 카카오톡 공유 -->
+        <button type="button" class="btn-share-channel" id="btnShareKakaoCustom" style="background:#FEE500; color:#191919; border:none; border-radius:10px; padding:12px 14px; font-weight:700; font-size:0.92rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; width:100%;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.3rem;">💬</span>
+            <div style="text-align:left;">
+              <div>카카오톡 (채팅방·나에게)</div>
+              <div style="font-size:0.75rem; color:#665e00;">3줄 핵심 요약 + 앱 설치 링크 포함</div>
+            </div>
+          </div>
+          <span style="font-size:0.82rem; background:#E5CF00; padding:4px 8px; border-radius:6px;">공유</span>
+        </button>
+
+        <!-- Threads(스레드) 공유 -->
+        <button type="button" class="btn-share-channel" id="btnShareThreads" style="background:#000000; color:#FFFFFF; border:none; border-radius:10px; padding:12px 14px; font-weight:700; font-size:0.92rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; width:100%;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.2rem;">🧵</span>
+            <div style="text-align:left;">
+              <div>Threads (스레드)</div>
+              <div style="font-size:0.75rem; color:#A1A1AA;">500자 제한 맞춤 인사이트 + 핵심 링크</div>
+            </div>
+          </div>
+          <span style="font-size:0.82rem; background:#27272A; padding:4px 8px; border-radius:6px;">스레드 열기 ↗</span>
+        </button>
+
+        <!-- 페이스북 공유 -->
+        <button type="button" class="btn-share-channel" id="btnShareFacebook" style="background:#1877F2; color:#FFFFFF; border:none; border-radius:10px; padding:12px 14px; font-weight:700; font-size:0.92rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; width:100%;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.2rem;">📘</span>
+            <div style="text-align:left;">
+              <div>Facebook (페이스북)</div>
+              <div style="font-size:0.75rem; color:#E0E7FF;">메타 피드 공유 + 판례 원문 링크</div>
+            </div>
+          </div>
+          <span style="font-size:0.82rem; background:#145DBF; padding:4px 8px; border-radius:6px;">페이스북 열기 ↗</span>
+        </button>
+
+        <!-- 스마트폰 앱(PWA) 바로가기 설치 유도 배너 -->
+        <div style="background:#F0FDF4; border:1.5px dashed #86EFAC; border-radius:10px; padding:12px; margin-top:4px;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:800; color:#047857; font-size:0.88rem; margin-bottom:4px;">
+            <span>📲</span> <span>스마트폰 홈화면에 [소식지 터] 앱 설치하기</span>
+          </div>
+          <p style="font-size:0.78rem; color:#4B5563; line-height:1.45; margin-bottom:8px;">
+            브라우저 메뉴에서 <strong>‘홈 화면에 추가’</strong>를 누르면 카톡 없이도 매달 새 판례를 터치 한 번으로 열어보실 수 있습니다.
+          </p>
+          <button type="button" id="btnTriggerInstallPrompt" style="background:#059669; color:#FFF; font-weight:700; font-size:0.82rem; border:none; padding:7px 12px; border-radius:6px; width:100%; cursor:pointer;">
+            📱 내 스마트폰에 ‘소식지 터’ 앱 바로 설치
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="app.js?v=1793327245"></script>
+  <script src="app.js?v=1793583000"></script>
 </body>
 </html>

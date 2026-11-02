@@ -269,6 +269,15 @@ function openArticle(id) {
     </div>
   ` : '';
 
+  const editorNoteHtml = art.editorNote ? `
+    <div class="box-editor-note" style="background:#F0FDF4; border:1.5px solid #86EFAC; border-left:5px solid #059669; border-radius:10px; padding:14px 16px; margin: 18px 0; font-family:var(--font-sans);">
+      <div style="display:flex; align-items:center; gap:6px; font-weight:800; color:#047857; font-size:0.95rem; margin-bottom:8px;">
+        <span>💡</span> <span>[편집자의 시선] 왜 이 판례에 주목해야 하는가</span>
+      </div>
+      <div style="font-size:0.92rem; color:#1F2937; line-height:1.65; white-space:pre-wrap; word-break:keep-all;">${escapeHtml(art.editorNote)}</div>
+    </div>
+  ` : '';
+
 
 
 
@@ -288,6 +297,7 @@ function openArticle(id) {
     </header>
 
     ${bulletsHtml}
+    ${editorNoteHtml}
     ${tocHtml}
 
     <div class="article-prose">
@@ -295,9 +305,9 @@ function openArticle(id) {
     </div>
 
     <div class="article-share-box">
-      <div class="share-box-desc">💡 이 판례 기사가 유용하셨나요? 나에게 카톡으로 남기거나 동료 소장님께 공유해 보세요!</div>
-      <button type="button" class="btn-share-kakao-big" id="btnShareArticleBottom">
-        <span>💬 카카오톡으로 기사 요약 & 소식지 링크 공유하기</span>
+      <div class="share-box-desc">💡 이 판례 기사가 유용하셨나요? 카톡·스레드·페이스북에 공유하거나 앱을 홈 화면에 소장하세요!</div>
+      <button type="button" class="btn-share-kakao-big" id="btnShareArticleBottom" style="background:var(--green-800);">
+        <span>📤 카톡·Threads·페이스북 맞춤 공유 &amp; 앱 설치하기</span>
       </button>
     </div>
 
@@ -317,7 +327,7 @@ function openArticle(id) {
 
   const btnShareBottom = document.getElementById('btnShareArticleBottom');
   if (btnShareBottom) {
-    btnShareBottom.addEventListener('click', shareCurrentArticle);
+    btnShareBottom.addEventListener('click', openShareModal);
   }
 
 
@@ -417,9 +427,29 @@ function bindEvents() {
     showToast(`글자 크기: ${Math.round(state.fontScale * 100)}%`);
   });
 
-  const btnShareTop = document.getElementById('btnShareArticleTop');
-  if (btnShareTop) {
-    btnShareTop.addEventListener('click', shareCurrentArticle);
+  const btnOpenShare = document.getElementById('btnOpenShareModal');
+  if (btnOpenShare) {
+    btnOpenShare.addEventListener('click', openShareModal);
+  }
+  const btnCloseShare = document.getElementById('btnCloseShareModal');
+  if (btnCloseShare) {
+    btnCloseShare.addEventListener('click', closeShareModal);
+  }
+  const btnShareKakao = document.getElementById('btnShareKakaoCustom');
+  if (btnShareKakao) {
+    btnShareKakao.addEventListener('click', () => shareToPlatform('kakao'));
+  }
+  const btnShareThreads = document.getElementById('btnShareThreads');
+  if (btnShareThreads) {
+    btnShareThreads.addEventListener('click', () => shareToPlatform('threads'));
+  }
+  const btnShareFacebook = document.getElementById('btnShareFacebook');
+  if (btnShareFacebook) {
+    btnShareFacebook.addEventListener('click', () => shareToPlatform('facebook'));
+  }
+  const btnInstallPrompt = document.getElementById('btnTriggerInstallPrompt');
+  if (btnInstallPrompt) {
+    btnInstallPrompt.addEventListener('click', triggerPwaInstall);
   }
 
   document.getElementById('btnBookmarkDetail').addEventListener('click', () => {
@@ -672,49 +702,99 @@ const INITIAL_ARTICLES = [
   }
 ];
 
-async function shareCurrentArticle() {
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+
+function openShareModal() {
+  const modal = document.getElementById('modalShareChannels');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeShareModal() {
+  const modal = document.getElementById('modalShareChannels');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function triggerPwaInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+      showToast('🎉 홈 화면에 ‘소식지 터’ 앱이 설치되었습니다!');
+    }
+    deferredInstallPrompt = null;
+  } else {
+    // 이미 설치되었거나 브라우저 메뉴 유도
+    showToast('💡 스마트폰 브라우저 우측 상단/하단 메뉴에서 [홈 화면에 추가]를 누르면 앱으로 설치됩니다!');
+  }
+}
+
+async function shareToPlatform(platform) {
   if (!state.currentArticleId) return;
   const art = state.articles.find(a => a.id === state.currentArticleId);
   if (!art) return;
 
   const shareUrl = `https://no1korealtor.github.io/ter-magazine/?article=${encodeURIComponent(art.id)}`;
-  const bullets = (art.summaryBullets && art.summaryBullets.length > 0)
-    ? '\n\n💡 [핵심 요약]\n' + art.summaryBullets.map(b => `• ${b}`).join('\n')
-    : '';
+  closeShareModal();
 
-  const shareTitle = `[공인중개사 소식지 터] ${art.title}`;
-  const shareText = `📘 [공인중개사 소식지 터]\n📌 ${art.category} | ${art.caseNumber || ''}\n\n"${art.title}"${bullets}\n\n👇 아래 링크를 누르면 '공인중개사 소식지 터'에서 기사 전문을 바로 보실 수 있습니다.\n${shareUrl}`;
-
-  // 1순위: 안드로이드 네이티브 브릿지 지원 시
-  if (window.AndroidBridge && typeof window.AndroidBridge.shareText === 'function') {
-    window.AndroidBridge.shareText(shareTitle, shareText);
+  if (platform === 'threads') {
+    // 🧵 Threads 성격: 첫 문장에 도발적인 인사이트 + 3줄 요약 + 링크
+    const bullets = (art.summaryBullets && art.summaryBullets.length > 0)
+      ? art.summaryBullets.slice(0, 2).map(b => `✔ ${b}`).join('\n')
+      : '';
+    const threadsText = `🚨 "${art.title}"\n\n${bullets}\n\n📖 법원 결정 전문 및 실무 체크포인트 확인하기:\n${shareUrl}\n\n#공인중개사 #부동산판례 #소식지터`;
+    
+    const intentUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(threadsText)}`;
+    window.open(intentUrl, '_blank');
+    showToast('🧵 Threads(스레드) 공유 창으로 이동합니다!');
     return;
   }
 
-  // 2순위: 모바일 브라우저 Web Share API (카카오톡, 문자 등 선택 창 호출)
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: shareTitle,
-        text: shareText
-      });
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-    }
+  if (platform === 'facebook') {
+    // 📘 페이스북: URL 인텐트 공유
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    window.open(fbUrl, '_blank', 'width=600,height=500');
+    showToast('📘 페이스북 공유 창으로 이동합니다!');
+    return;
   }
 
-  // 3순위: PC 또는 구형 환경 클립보드 복사
-  try {
-    await navigator.clipboard.writeText(shareText);
-    showToast('💬 기사 요약과 소식지 링크가 복사되었습니다! 카카오톡 대화창에 붙여넣기(Ctrl+V) 하세요.');
-  } catch (err) {
-    const ta = document.createElement('textarea');
-    ta.value = shareText;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-    showToast('💬 기사 요약과 소식지 링크가 복사되었습니다! 카카오톡에 붙여넣기 하세요.');
+  if (platform === 'kakao') {
+    // 💬 카카오톡: 상세 요약 + 앱 설치 유도 문구 결합
+    const bullets = (art.summaryBullets && art.summaryBullets.length > 0)
+      ? '\n\n💡 [바쁜 소장님을 위한 핵심 요약]\n' + art.summaryBullets.map(b => `• ${b}`).join('\n')
+      : '';
+
+    const shareTitle = `[공인중개사 소식지 터] ${art.title}`;
+    const shareText = `📘 [공인중개사 소식지 터]\n📌 ${art.category} | ${art.caseNumber || ''}\n\n"${art.title}"${bullets}\n\n📲 스마트폰 전용 앱으로 기사 전문 읽기:\n${shareUrl}\n(접속 후 '홈 화면에 추가'를 누르면 매달 새 판례를 터치 한 번으로 열어보실 수 있습니다)`;
+
+    // 1순위: 네이티브 브릿지
+    if (window.AndroidBridge && typeof window.AndroidBridge.shareText === 'function') {
+      window.AndroidBridge.shareText(shareTitle, shareText);
+      return;
+    }
+
+    // 2순위: Web Share API (모바일에서 카카오톡 앱 직접 선택)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    // 3순위: 클립보드 복사
+    try {
+      await navigator.clipboard.writeText(shareText);
+      showToast('💬 카톡용 요약문과 링크가 복사되었습니다! 카톡 채팅방에 붙여넣기(Ctrl+V) 하세요.');
+    } catch (err) {
+      showToast('💬 카톡용 요약문이 복사되었습니다!');
+    }
   }
 }
