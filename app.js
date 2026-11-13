@@ -103,6 +103,8 @@ function getFilteredArticles() {
   return state.articles.filter((art) => {
     if (state.currentCategory === 'BOOKMARK') {
       if (!state.bookmarks.includes(art.id)) return false;
+    } else if (state.currentCategory === '질의회신') {
+      if (art.docType !== '질의회신') return false;
     } else if (state.currentCategory !== 'ALL' && state.currentCategory !== 'INDEX') {
       if (art.category !== state.currentCategory) return false;
     }
@@ -144,6 +146,7 @@ function renderHomeAutoToc() {
           <span class="toc-entry-num">${num}</span>
           <div class="toc-entry-content-col">
             <div class="toc-entry-badge-row">
+              ${art.docType === '질의회신' ? `<span class="toc-entry-cat" style="background:#2563EB; color:#FFF;">💡 질의회신</span>` : ''}
               <span class="toc-entry-cat">${escapeHtml(art.category)}</span>
               ${art.caseNumber ? `<span class="toc-entry-casenum">${escapeHtml(art.caseNumber)}</span>` : ''}
             </div>
@@ -209,6 +212,7 @@ function renderFeaturedAndFeed() {
     return `
       <article class="article-item-card" data-id="${art.id}">
         <div class="card-meta-line">
+          ${art.docType === '질의회신' ? `<span class="badge-category" style="background:#2563EB; color:#FFF;">💡 질의회신</span>` : ''}
           <span class="badge-category">${escapeHtml(art.category)}</span>
           <span class="badge-casenum">${escapeHtml(art.caseNumber || art.publishedAt)}</span>
         </div>
@@ -262,17 +266,37 @@ function openArticle(id) {
 
   const bulletsHtml = (art.summaryBullets && art.summaryBullets.length > 0) ? `
     <div class="box-three-bullets">
-      <div class="three-bullets-title">⚡ 바쁜 소장님을 위한 3줄 핵심 요약</div>
+      <div class="three-bullets-title">${art.docType === '질의회신' ? '💡 바쁜 소장님을 위한 질의회신 3초 요약 (Q&A)' : '⚡ 바쁜 소장님을 위한 3줄 핵심 요약'}</div>
       <ul class="three-bullets-list">
         ${art.summaryBullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}
       </ul>
     </div>
   ` : '';
 
+  const govInfoHtml = (art.docType === '질의회신' || art.govDept || art.govPhone) ? `
+    <div class="box-gov-info" style="background:#EFF6FF; border:1.5px solid #BFDBFE; border-left:5px solid #2563EB; border-radius:10px; padding:15px 18px; margin: 20px 0; font-family:var(--font-sans); box-shadow:0 2px 8px rgba(37,99,235,0.06);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #DBEAFE; padding-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:6px; font-weight:800; color:#1D4ED8; font-size:0.95rem;">
+          <span>🏛️</span> <span>공식 행정 해석 소관기관 &amp; 실무 문의처</span>
+        </div>
+        <span style="font-size:0.75rem; background:#DBEAFE; color:#1E40AF; font-weight:800; padding:2px 8px; border-radius:4px;">정부 공식 회신</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:0.88rem;">
+        ${art.govDept ? `<div><strong style="color:#4B5563;">• 소관기관/부서:</strong> <span style="font-weight:700; color:#1E293B;">${escapeHtml(art.govDept)}</span></div>` : ''}
+        ${art.govOfficial ? `<div><strong style="color:#4B5563;">• 담당자/직급:</strong> <span style="font-weight:700; color:#1E293B;">${escapeHtml(art.govOfficial)}</span></div>` : ''}
+        ${art.govPhone ? `<div><strong style="color:#4B5563;">• 직통 행정전화:</strong> <a href="tel:${escapeHtml(art.govPhone)}" style="font-weight:800; color:#2563EB; text-decoration:underline;">☎ ${escapeHtml(art.govPhone)}</a></div>` : ''}
+        ${art.govDocNumber ? `<div><strong style="color:#4B5563;">• 민원/회신번호:</strong> <span style="font-family:monospace; font-weight:600; color:#374151;">${escapeHtml(art.govDocNumber)}</span></div>` : ''}
+      </div>
+      <div style="margin-top:10px; font-size:0.78rem; color:#6B7280; border-top:1px dashed #BFDBFE; padding-top:6px;">
+        ※ 공무원의 성명·직위 및 업무 전화번호는 공공기관 정보공개법 및 개인정보보호법에 따른 적법한 공개 정보입니다.
+      </div>
+    </div>
+  ` : '';
+
   const editorNoteHtml = art.editorNote ? `
     <div class="box-editor-note" style="background:#F0FDF4; border:1.5px solid #86EFAC; border-left:5px solid #059669; border-radius:10px; padding:14px 16px; margin: 18px 0; font-family:var(--font-sans);">
       <div style="display:flex; align-items:center; gap:6px; font-weight:800; color:#047857; font-size:0.95rem; margin-bottom:8px;">
-        <span>💡</span> <span>[편집자의 시선] 왜 이 판례에 주목해야 하는가</span>
+        <span>💡</span> <span>[편집자의 시선] 왜 이 ${art.docType === '질의회신' ? '유권해석' : '판례'}에 주목해야 하는가</span>
       </div>
       <div style="font-size:0.92rem; color:#1F2937; line-height:1.65; white-space:pre-wrap; word-break:keep-all;">${escapeHtml(art.editorNote)}</div>
     </div>
@@ -285,6 +309,7 @@ function openArticle(id) {
   detailEl.innerHTML = `
     <header class="article-head">
       <div class="article-head-badges">
+        ${art.docType === '질의회신' ? `<span style="background:#2563EB; color:#FFF; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:4px; margin-right:4px;">💡 행정청 질의회신</span>` : `<span style="background:#15803D; color:#FFF; font-size:0.75rem; font-weight:800; padding:3px 8px; border-radius:4px; margin-right:4px;">⚖️ 법원 판례</span>`}
         <span class="badge-category">${escapeHtml(art.category)}</span>
         <span class="badge-casenum">${escapeHtml(art.caseNumber || '')}</span>
       </div>
@@ -297,6 +322,7 @@ function openArticle(id) {
     </header>
 
     ${bulletsHtml}
+    ${govInfoHtml}
     ${editorNoteHtml}
     ${tocHtml}
 
@@ -304,8 +330,25 @@ function openArticle(id) {
       ${bodyHtml}
     </div>
 
+    ${govInfoHtml}
+
+    <!-- 현장 중개 실무 연계: 중개노트 소개 카드 배너 -->
+    <div style="margin: 28px 0 18px; padding: 16px 18px; background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.7rem; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🏡</span>
+        <div>
+          <div style="font-size: 0.76rem; font-weight: 800; color: #2563EB; letter-spacing: -0.2px;">현장 공인중개사 실무 필수 도구</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: #0F172A; margin-top: 2px;">안내부터 매물 현황 정리까지 한 번에 — 중개노트</div>
+          <div style="font-size: 0.78rem; color: #64748B; margin-top: 2px; line-height: 1.35;">바쁜 현장에서 깜빡하기 쉬운 매물 상태와 손님 브리핑을 1초 만에 관리하세요.</div>
+        </div>
+      </div>
+      <a href="https://no1korealtor.github.io/showing-note/" target="_blank" rel="noopener noreferrer" style="white-space: nowrap; background: #1E293B; color: #FFFFFF; font-size: 0.82rem; font-weight: 800; padding: 10px 14px; border-radius: 8px; text-decoration: none; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        열기 ↗
+      </a>
+    </div>
+
     <div class="article-share-box">
-      <div class="share-box-desc">💡 이 판례 기사가 유용하셨나요? 카톡·스레드·페이스북에 공유하거나 앱을 홈 화면에 소장하세요!</div>
+      <div class="share-box-desc">💡 이 기사가 유용하셨나요? 카톡·스레드·페이스북에 공유하거나 앱을 홈 화면에 소장하세요!</div>
       <button type="button" class="btn-share-kakao-big" id="btnShareArticleBottom" style="background:var(--green-800);">
         <span>📤 카톡·Threads·페이스북 맞춤 공유 &amp; 앱 설치하기</span>
       </button>
