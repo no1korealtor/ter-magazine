@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();
   renderAll();
 
+  // URL 파라미터로 지정된 기사가 있으면 즉시 열기
+  checkUrlDeepLink();
+
   // 앱 실행 시 Supabase 클라우드에서 최신 기사 실시간 동기화
   await fetchRemoteArticles();
   checkUrlDeepLink();
@@ -46,6 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === STORAGE_KEY_ARTICLES) {
       loadData();
       renderAll();
+      if (state.currentArticleId) {
+        openArticle(state.currentArticleId);
+      }
       showToast('📰 새 판례 기사가 업데이트되었습니다!');
     }
   });
@@ -65,6 +71,9 @@ async function fetchRemoteArticles() {
         state.articles = rows.map(r => r.data);
         localStorage.setItem(STORAGE_KEY_ARTICLES, JSON.stringify(state.articles));
         renderAll();
+        if (state.currentArticleId) {
+          openArticle(state.currentArticleId);
+        }
         console.log(`Supabase에서 ${state.articles.length}건 기사 동기화 완료!`);
       }
     }
